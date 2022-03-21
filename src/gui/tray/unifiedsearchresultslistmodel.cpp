@@ -19,7 +19,7 @@
 #include "guiutility.h"
 #include "folderman.h"
 #include "networkjobs.h"
-#include "systray.h"
+#include "theme.h"
 
 #include <algorithm>
 
@@ -31,40 +31,40 @@ QString imagePlaceholderUrlForProviderId(const QString &providerId)
 {
     if (providerId.contains(QStringLiteral("message"), Qt::CaseInsensitive)
         || providerId.contains(QStringLiteral("talk"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral("qrc:///client/theme/white/wizard-talk.svg") : QStringLiteral("qrc:///client/theme/black/wizard-talk.svg");
+        return QStringLiteral("qrc:///client/theme/__COLOR__/wizard-talk.svg");
     } else if (providerId.contains(QStringLiteral("file"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral("qrc:///client/theme/white/edit.svg") : QStringLiteral("qrc:///client/theme/black/edit.svg");
+        return QStringLiteral("qrc:///client/theme/__COLOR__/edit.svg");
     } else if (providerId.contains(QStringLiteral("deck"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral("qrc:///client/theme/white/deck.svg") : QStringLiteral("qrc:///client/theme/black/deck.svg");
+        return QStringLiteral("qrc:///client/theme/__COLOR__/deck.svg");
     } else if (providerId.contains(QStringLiteral("calendar"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral("qrc:///client/theme/white/calendar.svg") : QStringLiteral("qrc:///client/theme/black/calendar.svg");
+        return QStringLiteral("qrc:///client/theme/__COLOR__/calendar.svg");
     } else if (providerId.contains(QStringLiteral("mail"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral("qrc:///client/theme/white/email.svg") : QStringLiteral("qrc:///client/theme/black/email.svg");
+        return QStringLiteral("qrc:///client/theme/__COLOR__/email.svg");
     } else if (providerId.contains(QStringLiteral("comment"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral("qrc:///client/theme/white/comment.svg") : QStringLiteral("qrc:///client/theme/black/comment.svg");
+        return QStringLiteral("qrc:///client/theme/__COLOR__/comment.svg");
     }
 
-    return QStringLiteral("qrc:///client/theme/change.svg");
+    return QStringLiteral("qrc:///client/theme/__COLOR__/change.svg");
 }
 
 QString localIconPathFromIconPrefix(const QString &iconNameWithPrefix)
 {
     if (iconNameWithPrefix.contains(QStringLiteral("message"), Qt::CaseInsensitive)
         || iconNameWithPrefix.contains(QStringLiteral("talk"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/wizard-talk.svg") : QStringLiteral(":/client/theme/black/wizard-talk.svg");
+        return QStringLiteral(":/client/theme/__COLOR__/wizard-talk.svg");
     } else if (iconNameWithPrefix.contains(QStringLiteral("folder"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/folder.svg") : QStringLiteral(":/client/theme/black/folder.svg");
+        return QStringLiteral(":/client/theme/__COLOR__/folder.svg");
     } else if (iconNameWithPrefix.contains(QStringLiteral("deck"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/deck.svg") : QStringLiteral(":/client/theme/black/deck.svg");
+        return QStringLiteral(":/client/theme/__COLOR__/deck.svg");
     } else if (iconNameWithPrefix.contains(QStringLiteral("contacts"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/wizard-groupware.svg") : QStringLiteral(":/client/theme/black/wizard-groupware.svg");
+        return QStringLiteral(":/client/theme/__COLOR__/wizard-groupware.svg");
     } else if (iconNameWithPrefix.contains(QStringLiteral("calendar"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/calendar.svg") : QStringLiteral(":/client/theme/black/calendar.svg");
+        return QStringLiteral(":/client/theme/__COLOR__/calendar.svg");
     } else if (iconNameWithPrefix.contains(QStringLiteral("mail"), Qt::CaseInsensitive)) {
-        return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/email.svg") : QStringLiteral(":/client/theme/black/email.svg");
+        return QStringLiteral(":/client/theme/__COLOR__/email.svg");
     }
 
-    return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/change.svg") : QStringLiteral(":/client/theme/change.svg");
+    return QStringLiteral(":/client/theme/__COLOR__/change.svg");
 }
 
 QString iconUrlForDefaultIconName(const QString &defaultIconName)
@@ -79,11 +79,17 @@ QString iconUrlForDefaultIconName(const QString &defaultIconName)
         const auto parts = defaultIconName.split(QLatin1Char('-'));
 
         if (parts.size() > 1) {
-            const QString blackOrWhite = OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/") : QStringLiteral(":/client/theme/black/");
-            const QString blackIconFilePath = blackOrWhite + parts[1] + QStringLiteral(".svg");
+            // The __COLOR__ gets replaced in QML
+            const QString blackOrWhite = QStringLiteral(":/client/theme/__COLOR__/");
+            const QString blackPath = QStringLiteral(":/client/theme/black/");
+            const QString whitePath = QStringLiteral(":/client/theme/white/");
 
-            if (QFile::exists(blackIconFilePath)) {
-                return blackIconFilePath;
+            const QString blackOrWhiteIconFilePath = blackOrWhite + parts[1] + QStringLiteral(".svg");
+            const QString blackIconFilePath = blackPath + parts[1] + QStringLiteral(".svg");
+            const QString whiteIconFilePath = whitePath + parts[1] + QStringLiteral(".svg");
+
+            if (QFile::exists(blackIconFilePath) && QFile::exists(whiteIconFilePath)) {
+                return blackOrWhiteIconFilePath;
             }
 
             const QString iconFilePath = QStringLiteral(":/client/theme/") + parts[1] + QStringLiteral(".svg");
@@ -100,7 +106,7 @@ QString iconUrlForDefaultIconName(const QString &defaultIconName)
         }
     }
 
-    return OCC::Systray::instance()->darkMode() ? QStringLiteral(":/client/theme/white/change.svg") : QStringLiteral(":/client/theme/change.svg");
+    return QStringLiteral(":/client/theme/__COLOR__/change.svg");
 }
 
 QString generateUrlForThumbnail(const QString &thumbnailUrl, const QUrl &serverUrl)
