@@ -304,10 +304,41 @@ void GeneralSettings::slotUpdateInfo()
         this, &GeneralSettings::slotUpdateChannelChanged, Qt::UniqueConnection);
 }
 
-void GeneralSettings::slotUpdateChannelChanged(const QString &channel)
+void GeneralSettings::slotUpdateChannelChanged(const QString &translatedChannel)
 {
-    if (channel == ConfigFile().updateChannel())
+    const auto updateChannelToLocalized = [](const QString &channel) -> QString {
+        auto translatedChannel = QString{};
+
+        if (channel == QStringLiteral("stable")) {
+            translatedChannel = tr("stable");
+        } else if (channel == QStringLiteral("beta")) {
+            translatedChannel = tr("beta");
+        }
+
+        return translatedChannel;
+    };
+
+    const auto updateChannelFromLocalized = [](int index) -> QString {
+        auto channel = QString{};
+
+        switch (index)
+        {
+        case 0:
+            channel = QStringLiteral("stable");
+            break;
+        case 1:
+            channel = QStringLiteral("beta");
+            break;
+        }
+
+        return channel;
+    };
+
+    auto channel = updateChannelFromLocalized(_ui->updateChannel->currentIndex());
+
+    if (translatedChannel == ConfigFile().updateChannel()) {
         return;
+    }
 
     auto msgBox = new QMessageBox(
         QMessageBox::Warning,
@@ -327,7 +358,7 @@ void GeneralSettings::slotUpdateChannelChanged(const QString &channel)
         this);
     auto acceptButton = msgBox->addButton(tr("Change update channel"), QMessageBox::AcceptRole);
     msgBox->addButton(tr("Cancel"), QMessageBox::RejectRole);
-    connect(msgBox, &QMessageBox::finished, msgBox, [this, channel, msgBox, acceptButton] {
+    connect(msgBox, &QMessageBox::finished, msgBox, [this, channel, msgBox, acceptButton, updateChannelToLocalized] {
         msgBox->deleteLater();
         if (msgBox->clickedButton() == acceptButton) {
             ConfigFile().setUpdateChannel(channel);
@@ -342,7 +373,7 @@ void GeneralSettings::slotUpdateChannelChanged(const QString &channel)
             }
 #endif
         } else {
-            _ui->updateChannel->setCurrentText(ConfigFile().updateChannel());
+            _ui->updateChannel->setCurrentText(updateChannelToLocalized(ConfigFile().updateChannel()));
         }
     });
     msgBox->open();
